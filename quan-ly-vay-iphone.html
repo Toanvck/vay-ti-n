@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VayTiền">
+<meta name="theme-color" content="#7c6cfa">
+<link rel="manifest" href="manifest.json">
+<title>Quản Lý Vay Tiền</title>
+<style>
+:root {
+  --bg:#0f0f13;--surface:#18181f;--surface2:#22222c;--border:#2e2e3a;
+  --accent:#7c6cfa;--green:#4eca8b;--amber:#f5a623;--red:#fa4d4d;
+  --text:#f0f0f5;--text2:#9898b0;--text3:#5a5a72;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
+.app{display:flex;flex-direction:column;height:100%;height:100dvh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 14px) 16px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-size:17px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--safe-bottom) + 80px);}
+.bottom-nav{background:var(--surface);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);flex-shrink:0;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;border:none;background:transparent;color:var(--text3);font-size:10px;cursor:pointer;}
+.nav-item.active{color:var(--accent);}
+.nav-icon{font-size:20px;line-height:1;}
+.panel{display:none;}.panel.active{display:block;}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.sum-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
+.sum-value{font-size:20px;font-weight:700;}
+.col-p{color:var(--accent)}.col-g{color:var(--green)}.col-r{color:var(--red)}.col-a{color:var(--amber)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
+.card-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;color:var(--text3);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:15px;outline:none;-webkit-appearance:none;font-family:inherit;}
+.field textarea{resize:none;line-height:1.5;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+.chip-label{font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+.chip-val{font-weight:700;font-size:16px;}
+.warn{padding:10px 14px;border-radius:10px;font-size:13px;margin-top:12px;font-weight:500;display:none;border-left:3px solid;}
+.warn.show{display:block;}
+.warn.g{background:rgba(78,202,139,0.1);border-color:var(--green);color:var(--green);}
+.warn.a{background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);}
+.warn.r{background:rgba(250,77,77,0.1);border-color:var(--red);color:var(--red);}
+.btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn:active{opacity:0.85;}
+.list-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.list-item:active{border-color:var(--accent);}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.av-g{background:rgba(78,202,139,0.15);color:var(--green);}
+.av-p{background:rgba(124,108,250,0.15);color:var(--accent);}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.item-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.badge{display:inline-block;font-size:11px;padding:4px 10px;border-radius:100px;font-weight:600;border:none;cursor:pointer;font-family:inherit;}
+.badge-g{background:rgba(78,202,139,0.15);color:var(--green);}
+.badge-r{background:rgba(250,77,77,0.15);color:var(--red);}
+.badge-a{background:rgba(245,166,35,0.15);color:var(--amber);}
+.badge-p{background:rgba(124,108,250,0.15);color:var(--accent);}
+.badge-gray{background:rgba(152,152,176,0.15);color:var(--text2);}
+.section-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-left:4px;}
+.empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:14px;}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+
+/* DETAIL PAGE */
+.detail-page{display:none;position:absolute;inset:0;background:var(--bg);z-index:200;flex-direction:column;}
+.detail-page.open{display:flex;}
+.detail-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 50px;}
+.detail-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 14px) 16px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.back-btn{background:none;border:none;color:var(--accent);font-size:15px;cursor:pointer;padding:4px 8px;border-radius:8px;}
+.detail-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.detail-avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;}
+.detail-name{font-size:20px;font-weight:700;}
+.detail-type{font-size:13px;color:var(--text3);margin-top:2px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;}
+.info-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;}
+.info-value{font-size:16px;font-weight:700;}
+.progress-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:8px 0;}
+.progress-fill{height:100%;border-radius:4px;background:var(--green);transition:width 0.4s;}
+.note-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+.note-text{font-size:14px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+.note-empty{font-size:13px;color:var(--text3);}
+.add-pay{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+.add-pay-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+.pay-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.pay-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;width:100%;font-family:inherit;}
+.pay-input:focus{border-color:var(--accent);}
+.btn-pay{padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;}
+.pay-section{margin-bottom:14px;}
+.pay-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+.pay-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.pay-left .pay-date{font-size:13px;font-weight:600;}
+.pay-left .pay-note{font-size:12px;color:var(--text3);margin-top:2px;}
+.pay-amount{font-size:15px;font-weight:700;color:var(--green);}
+.pay-del{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:2px 8px;border-radius:6px;margin-left:8px;}
+.pay-del:active{color:var(--red);}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.btn-del{width:100%;padding:13px;background:rgba(250,77,77,0.1);color:var(--red);border:1px solid rgba(250,77,77,0.3);border-radius:12px;font-size:14px;cursor:pointer;font-family:inherit;margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>VayTiền</div>
+    <div style="font-size:12px;color:var(--text3);">Lưu tự động</div>
+  </div>
+  <div class="scroll">
+
+    <!-- TÍNH LÃI -->
+    <div class="panel active" id="tab-calc">
+      <div class="summary" id="overview"></div>
+      <div class="card">
+        <div class="card-title">Tính lãi nhanh</div>
+        <div class="field-row">
+          <div class="field"><label>Tiền vay (triệu)</label><input type="number" id="c-p" value="50" min="1" inputmode="decimal"></div>
+          <div class="field"><label>Lãi phải trả (triệu)</label><input type="number" id="c-i" value="12" min="0" inputmode="decimal"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Thời hạn</label><input type="number" id="c-m" value="2" min="1" inputmode="numeric"></div>
+          <div class="field"><label>Đơn vị</label><select id="c-u"><option value="month">Tháng</option><option value="day">Ngày</option></select></div>
+        </div>
+        <div class="chips" id="c-chips"></div>
+        <div class="warn" id="c-warn"></div>
+      </div>
+    </div>
+
+    <!-- NGƯỜI VAY -->
+    <div class="panel" id="tab-borrowers">
+      <div class="card">
+        <div class="card-title">Thêm người vay</div>
+        <div class="field"><label>Họ và tên</label><input type="text" id="b-name" placeholder="Nguyễn Văn A"></div>
+        <div class="field-row">
+          <div class="field"><label>Tiền vay (triệu)</label><input type="number" id="b-p" value="30" min="1" inputmode="decimal"></div>
+          <div class="field"><label>Lãi/tháng (triệu)</label><input type="number" id="b-i" value="3" min="0" inputmode="decimal"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Thời hạn (tháng)</label><input type="number" id="b-m" value="1" min="1" inputmode="numeric"></div>
+          <div class="field"><label>Ngày bắt đầu</label><input type="date" id="b-date"></div>
+        </div>
+        <div class="field"><label>Ghi chú</label><textarea id="b-note" rows="3" placeholder="Mục đích vay, số điện thoại, CCCD, tài sản thế chấp..."></textarea></div>
+        <button class="btn" onclick="addBorrower()">+ Thêm người vay</button>
+      </div>
+      <div class="section-label">Danh sách người vay</div>
+      <div id="b-list"></div>
+    </div>
+
+    <!-- NGƯỜI CHO VAY -->
+    <div class="panel" id="tab-lenders">
+      <div class="card">
+        <div class="card-title">Thêm người cho vay</div>
+        <div class="field"><label>Họ và tên</label><input type="text" id="l-name" placeholder="Trần Thị B"></div>
+        <div class="field-row">
+          <div class="field"><label>Tiền cho vay (triệu)</label><input type="number" id="l-p" value="50" min="1" inputmode="decimal"></div>
+          <div class="field"><label>Lãi/tháng (triệu)</label><input type="number" id="l-i" value="6" min="0" inputmode="decimal"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Thời hạn (tháng)</label><input type="number" id="l-m" value="2" min="1" inputmode="numeric"></div>
+          <div class="field"><label>Ngày bắt đầu</label><input type="date" id="l-date"></div>
+        </div>
+        <div class="field"><label>Ghi chú</label><textarea id="l-note" rows="3" placeholder="Số điện thoại, điều kiện cho vay, thông tin liên lạc..."></textarea></div>
+        <button class="btn" onclick="addLender()">+ Thêm người cho vay</button>
+      </div>
+      <div class="section-label">Danh sách người cho vay</div>
+      <div id="l-list"></div>
+    </div>
+
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('calc',this)"><span class="nav-icon">🧮</span>Tính lãi</button>
+    <button class="nav-item" onclick="switchTab('borrowers',this)"><span class="nav-icon">👤</span>Người vay</button>
+    <button class="nav-item" onclick="switchTab('lenders',this)"><span class="nav-icon">💰</span>Cho vay</button>
+  </nav>
+</div>
+
+<!-- TRANG CHI TIẾT -->
+<div class="detail-page" id="detail-page">
+  <div class="detail-topbar">
+    <button class="back-btn" onclick="closeDetail()">← Quay lại</button>
+    <div style="font-size:13px;color:var(--text3);" id="detail-tab-label"></div>
+    <div style="width:70px;"></div>
+  </div>
+  <div class="detail-scroll">
+    <div class="detail-header">
+      <div class="detail-avatar" id="d-avatar"></div>
+      <div>
+        <div class="detail-name" id="d-name"></div>
+        <div class="detail-type" id="d-type"></div>
+      </div>
+    </div>
+
+    <div class="info-grid" id="d-info"></div>
+
+    <!-- TIẾN ĐỘ -->
+    <div class="card">
+      <div class="card-title">Tiến độ thanh toán</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:13px;color:var(--text2);">Đã trả</span>
+        <span style="font-size:14px;font-weight:700;" id="d-paid-text"></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="d-progress-fill"></div></div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--text3);" id="d-remaining"></span>
+        <span style="font-size:12px;color:var(--text3);" id="d-total-label"></span>
+      </div>
+    </div>
+
+    <!-- GHI CHÚ -->
+    <div class="note-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">Ghi chú</span>
+        <button style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;" onclick="toggleEditNote()">Sửa</button>
+      </div>
+      <div id="d-note-content"></div>
+      <div id="d-note-edit" style="display:none;margin-top:10px;">
+        <textarea class="pay-input" id="d-note-input" rows="5" style="border-radius:10px;padding:12px;margin-bottom:8px;width:100%;"></textarea>
+        <button class="btn-pay" onclick="saveNote()">Lưu ghi chú</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- THÊM THANH TOÁN -->
+    <div class="add-pay">
+      <div class="add-pay-title">Ghi nhận thanh toán</div>
+      <div class="pay-row">
+        <input class="pay-input" type="number" id="pay-amount" placeholder="Số tiền (triệu)" inputmode="decimal">
+        <input class="pay-input" type="date" id="pay-date">
+      </div>
+      <input class="pay-input" type="text" id="pay-note" placeholder="Ghi chú: tháng mấy, chuyển khoản..." style="margin-bottom:8px;">
+      <button class="btn-pay" onclick="addPayment()">+ Ghi nhận thanh toán</button>
+    </div>
+
+    <!-- LỊCH SỬ -->
+    <div class="pay-section">
+      <div class="pay-title">Lịch sử thanh toán</div>
+      <div id="d-payments"></div>
+    </div>
+
+    <div class="divider"></div>
+    <button class="btn-del" id="d-del-btn">Xoá người này</button>
+  </div>
+</div>
+
+<script>
+let borrowers = JSON.parse(localStorage.getItem('vay_b3')||'[]');
+let lenders   = JSON.parse(localStorage.getItem('vay_l3')||'[]');
+let curId=null, curType=null;
+
+function save(){localStorage.setItem('vay_b3',JSON.stringify(borrowers));localStorage.setItem('vay_l3',JSON.stringify(lenders));}
+function fmt(n){return parseFloat(n.toFixed(2));}
+function pct(n){return fmt(n)+'%';}
+function initials(n){return n.trim().split(' ').filter(Boolean).slice(-2).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';}
+function rateInfo(r){
+  if(r<=1.5)return{cls:'g',label:'Bình thường',msg:'Lãi suất hợp lý.'};
+  if(r<=5)return{cls:'a',label:'Lãi cao',msg:'Cao hơn ngân hàng nhiều. Nên cân nhắc!'};
+  return{cls:'r',label:'Tín dụng đen!',msg:'Nguy hiểm! Lãi/năm vượt 60%. Nguy cơ bẫy nợ!'};
+}
+function sCls(s){return{'Đã trả':'g','Trễ hạn':'r','Đang trả':'a','Chưa trả':'gray','Đã thu hồi':'g','Quá hạn':'r','Đang nợ':'p'}[s]||'gray';}
+
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function calcLite(){
+  const p=parseFloat(document.getElementById('c-p').value)||0;
+  const i=parseFloat(document.getElementById('c-i').value)||0;
+  const m=parseFloat(document.getElementById('c-m').value)||1;
+  const u=document.getElementById('c-u').value;
+  const months=u==='day'?m/30:m;
+  if(p<=0)return;
+  const mRate=(i/p/months)*100,yRate=mRate*12,total=p+i,bank=p*0.01*months;
+  const info=rateInfo(mRate);
+  document.getElementById('c-chips').innerHTML=`
+    <div class="chip"><div class="chip-label">Lãi / tháng</div><div class="chip-val col-${info.cls}">${pct(mRate)}</div></div>
+    <div class="chip"><div class="chip-label">Lãi / năm</div><div class="chip-val col-${info.cls}">${pct(yRate)}</div></div>
+    <div class="chip"><div class="chip-label">Tổng phải trả</div><div class="chip-val">${fmt(total)} tr</div></div>
+    <div class="chip"><div class="chip-label">Cao hơn NH</div><div class="chip-val col-${info.cls}">${fmt(i/bank)}x</div></div>`;
+  const w=document.getElementById('c-warn');
+  w.className='warn show '+info.cls;w.textContent=info.msg;
+  updateOverview();
+}
+
+function updateOverview(){
+  const tb=borrowers.reduce((s,x)=>s+x.p,0);
+  const tl=lenders.reduce((s,x)=>s+x.p,0);
+  const ib=borrowers.reduce((s,x)=>s+x.i*x.m,0);
+  const il=lenders.reduce((s,x)=>s+x.i*x.m,0);
+  document.getElementById('overview').innerHTML=`
+    <div class="sum-card"><div class="sum-label">Tổng vay</div><div class="sum-value col-p">${fmt(tb)}tr</div></div>
+    <div class="sum-card"><div class="sum-label">Tổng cho vay</div><div class="sum-value col-a">${fmt(tl)}tr</div></div>
+    <div class="sum-card"><div class="sum-label">Lãi thu về</div><div class="sum-value col-g">${fmt(ib)}tr</div></div>
+    <div class="sum-card"><div class="sum-label">Lãi phải trả</div><div class="sum-value col-r">${fmt(il)}tr</div></div>`;
+}
+
+function addBorrower(){
+  const name=document.getElementById('b-name').value.trim();
+  if(!name){alert('Nhập tên!');return;}
+  const p=parseFloat(document.getElementById('b-p').value)||0;
+  const i=parseFloat(document.getElementById('b-i').value)||0;
+  const m=parseInt(document.getElementById('b-m').value)||1;
+  const date=document.getElementById('b-date').value;
+  const note=document.getElementById('b-note').value.trim();
+  const mRate=p>0?(i/p)*100:0;
+  borrowers.push({id:Date.now(),name,p,i,m,date,note,mRate,status:'Chưa trả',payments:[]});
+  save();document.getElementById('b-name').value='';document.getElementById('b-note').value='';
+  renderBorrowers();updateOverview();
+}
+
+function addLender(){
+  const name=document.getElementById('l-name').value.trim();
+  if(!name){alert('Nhập tên!');return;}
+  const p=parseFloat(document.getElementById('l-p').value)||0;
+  const i=parseFloat(document.getElementById('l-i').value)||0;
+  const m=parseInt(document.getElementById('l-m').value)||1;
+  const date=document.getElementById('l-date').value;
+  const note=document.getElementById('l-note').value.trim();
+  const mRate=p>0?(i/p)*100:0;
+  lenders.push({id:Date.now(),name,p,i,m,date,note,mRate,status:'Đang nợ',payments:[]});
+  save();document.getElementById('l-name').value='';document.getElementById('l-note').value='';
+  renderLenders();updateOverview();
+}
+
+function renderBorrowers(){
+  const el=document.getElementById('b-list');
+  if(!borrowers.length){el.innerHTML='<div class="empty"><div class="empty-icon">👤</div>Chưa có người vay nào</div>';return;}
+  el.innerHTML=borrowers.map(b=>{
+    const ri=rateInfo(b.mRate);
+    const paid=(b.payments||[]).reduce((s,p)=>s+p.amount,0);
+    const total=b.i*b.m;
+    return `<div class="list-item" onclick="openDetail(${b.id},'borrower')">
+      <div class="avatar av-g">${initials(b.name)}</div>
+      <div class="item-info">
+        <div class="item-name">${b.name}</div>
+        <div class="item-sub">${fmt(b.p)}tr · ${b.m}th · đã trả ${fmt(paid)}/${fmt(total)}tr lãi</div>
+      </div>
+      <div class="item-right">
+        <span class="badge badge-${ri.cls}" style="font-size:11px;padding:3px 8px;">${pct(b.mRate)}/th</span>
+        <span class="badge badge-${sCls(b.status)}">${b.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLenders(){
+  const el=document.getElementById('l-list');
+  if(!lenders.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div>Chưa có người cho vay nào</div>';return;}
+  el.innerHTML=lenders.map(l=>{
+    const ri=rateInfo(l.mRate);
+    const paid=(l.payments||[]).reduce((s,p)=>s+p.amount,0);
+    const total=l.i*l.m;
+    return `<div class="list-item" onclick="openDetail(${l.id},'lender')">
+      <div class="avatar av-p">${initials(l.name)}</div>
+      <div class="item-info">
+        <div class="item-name">${l.name}</div>
+        <div class="item-sub">${fmt(l.p)}tr · ${l.m}th · đã trả ${fmt(paid)}/${fmt(total)}tr lãi</div>
+      </div>
+      <div class="item-right">
+        <span class="badge badge-${ri.cls}" style="font-size:11px;padding:3px 8px;">${pct(l.mRate)}/th</span>
+        <span class="badge badge-${sCls(l.status)}">${l.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDetail(id,type){
+  const arr=type==='borrower'?borrowers:lenders;
+  const item=arr.find(x=>x.id===id);
+  if(!item)return;
+  curId=id;curType=type;
+  document.getElementById('detail-tab-label').textContent=type==='borrower'?'Người vay':'Người cho vay';
+  const av=document.getElementById('d-avatar');
+  av.textContent=initials(item.name);av.className='detail-avatar '+(type==='borrower'?'av-g':'av-p');
+  document.getElementById('d-name').textContent=item.name;
+  document.getElementById('d-type').textContent=type==='borrower'?'Người vay':'Người cho vay';
+  const ri=rateInfo(item.mRate);
+  document.getElementById('d-info').innerHTML=`
+    <div class="info-card"><div class="info-label">Số tiền</div><div class="info-value col-p">${fmt(item.p)}tr</div></div>
+    <div class="info-card"><div class="info-label">Lãi/tháng</div><div class="info-value col-a">${fmt(item.i)}tr</div></div>
+    <div class="info-card"><div class="info-label">Thời hạn</div><div class="info-value">${item.m} tháng</div></div>
+    <div class="info-card"><div class="info-label">Tổng lãi</div><div class="info-value col-r">${fmt(item.i*item.m)}tr</div></div>
+    <div class="info-card"><div class="info-label">Lãi%/tháng</div><div class="info-value col-${ri.cls}">${pct(item.mRate)}</div></div>
+    <div class="info-card"><div class="info-label">Ngày bắt đầu</div><div class="info-value" style="font-size:13px;">${item.date||'—'}</div></div>`;
+  renderDetailProgress(item);
+  renderDetailNote(item);
+  renderDetailPayments(item);
+  document.getElementById('pay-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('pay-amount').value='';
+  document.getElementById('pay-note').value='';
+  document.getElementById('d-del-btn').onclick=()=>deletePerson(id,type);
+  document.getElementById('detail-page').classList.add('open');
+  document.querySelector('.detail-scroll').scrollTop=0;
+}
+
+function renderDetailProgress(item){
+  const paid=(item.payments||[]).reduce((s,p)=>s+p.amount,0);
+  const total=item.i*item.m;
+  const pct2=total>0?Math.min(100,(paid/total)*100):0;
+  const remaining=Math.max(0,total-paid);
+  document.getElementById('d-paid-text').textContent=`${fmt(paid)} / ${fmt(total)} triệu`;
+  document.getElementById('d-paid-text').style.color=paid>=total?'var(--green)':'var(--text)';
+  document.getElementById('d-progress-fill').style.width=pct2+'%';
+  document.getElementById('d-remaining').textContent=remaining>0?`Còn lại: ${fmt(remaining)}tr`:'✓ Đã trả đủ';
+  document.getElementById('d-total-label').textContent=`Tổng lãi: ${fmt(total)}tr`;
+}
+
+function renderDetailNote(item){
+  document.getElementById('d-note-input').value=item.note||'';
+  document.getElementById('d-note-edit').style.display='none';
+  const c=document.getElementById('d-note-content');
+  if(item.note&&item.note.trim()){
+    c.innerHTML=`<div class="note-text">${item.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  }else{
+    c.innerHTML='<div class="note-empty">Chưa có ghi chú. Bấm "Sửa" để thêm.</div>';
+  }
+}
+
+function toggleEditNote(){
+  const ed=document.getElementById('d-note-edit');
+  ed.style.display=ed.style.display==='none'?'block':'none';
+  if(ed.style.display==='block')document.getElementById('d-note-input').focus();
+}
+
+function saveNote(){
+  const arr=curType==='borrower'?borrowers:lenders;
+  const item=arr.find(x=>x.id===curId);
+  if(!item)return;
+  item.note=document.getElementById('d-note-input').value.trim();
+  save();renderDetailNote(item);
+  if(curType==='borrower')renderBorrowers();else renderLenders();
+}
+
+function renderDetailPayments(item){
+  const el=document.getElementById('d-payments');
+  const pays=(item.payments||[]).slice().reverse();
+  if(!pays.length){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:13px;">Chưa có thanh toán nào</div>';return;}
+  el.innerHTML=pays.map(p=>`
+    <div class="pay-item">
+      <div class="pay-left">
+        <div class="pay-date">${p.date||'—'}</div>
+        ${p.note?`<div class="pay-note">${p.note}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;">
+        <div class="pay-amount">+${fmt(p.amount)}tr</div>
+        <button class="pay-del" onclick="delPayment(${p.id})">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function addPayment(){
+  const amount=parseFloat(document.getElementById('pay-amount').value)||0;
+  if(amount<=0){alert('Nhập số tiền!');return;}
+  const date=document.getElementById('pay-date').value;
+  const note=document.getElementById('pay-note').value.trim();
+  const arr=curType==='borrower'?borrowers:lenders;
+  const item=arr.find(x=>x.id===curId);
+  if(!item)return;
+  if(!item.payments)item.payments=[];
+  item.payments.push({id:Date.now(),amount,date,note});
+  save();
+  document.getElementById('pay-amount').value='';
+  document.getElementById('pay-note').value='';
+  renderDetailProgress(item);renderDetailPayments(item);
+  if(curType==='borrower')renderBorrowers();else renderLenders();
+  updateOverview();
+}
+
+function delPayment(pid){
+  if(!confirm('Xoá thanh toán này?'))return;
+  const arr=curType==='borrower'?borrowers:lenders;
+  const item=arr.find(x=>x.id===curId);
+  if(!item)return;
+  item.payments=(item.payments||[]).filter(p=>p.id!==pid);
+  save();renderDetailProgress(item);renderDetailPayments(item);
+  if(curType==='borrower')renderBorrowers();else renderLenders();
+  updateOverview();
+}
+
+function deletePerson(id,type){
+  if(!confirm('Xoá người này?'))return;
+  if(type==='borrower'){borrowers=borrowers.filter(x=>x.id!==id);renderBorrowers();}
+  else{lenders=lenders.filter(x=>x.id!==id);renderLenders();}
+  save();updateOverview();closeDetail();
+}
+
+function closeDetail(){
+  document.getElementById('detail-page').classList.remove('open');
+  curId=null;curType=null;
+}
+
+const today=new Date().toISOString().split('T')[0];
+document.getElementById('b-date').value=today;
+document.getElementById('l-date').value=today;
+['c-p','c-i','c-m','c-u'].forEach(id=>document.getElementById(id).addEventListener('input',calcLite));
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+calcLite();renderBorrowers();renderLenders();updateOverview();
+</script>
+</body>
+</html>
